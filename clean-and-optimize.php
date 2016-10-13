@@ -65,8 +65,9 @@ function ts_remove_wp_logo() {
 	$wp_admin_bar->remove_menu('wp-logo');
 }
 
-if (get_clnoptmz_setting('disable_wp_logo'))
+if (get_clnoptmz_setting('disable_wp_logo')) {
 	add_action( 'wp_before_admin_bar_render', 'ts_remove_wp_logo' );
+}
 
 
 /* ----- AUTOP ------------------------------------------------------------ */
@@ -94,12 +95,12 @@ function ts_custom_login_logo() {
 
 function ts_custom_login_url() { return home_url(); }
 
-function ts_custom_login_title() { return ''; }
+// function ts_custom_login_title() { return ''; }
 
 if (!empty( get_clnoptmz_setting('login_logo') )) {
 	add_action('login_head', 'ts_custom_login_logo');
         add_filter('login_headerurl', 'ts_custom_login_url');
-        add_filter('login_headertitle', 'ts_custom_login_title');
+        add_filter('login_headertitle', '__return_empty_string');  // 'ts_custom_login_title');
 }
 
 

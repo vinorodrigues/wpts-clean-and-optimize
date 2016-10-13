@@ -220,7 +220,7 @@ function ts_clnoptmz_plugin_action_links($links) {
 add_filter( 'plugin_action_links_'.dirname(plugin_basename(__FILE__)).'/clean-and-optimize.php',
 	'ts_clnoptmz_plugin_action_links' );
 
-function ts_clnoptmz_admin_scripts() {
+function ts_clnoptmz_admin_scripts_1() {
 	wp_enqueue_media();
 }
 
@@ -228,38 +228,55 @@ function ts_clnoptmz_admin_scripts() {
 function ts_clnoptmz_admin_footer() {
 ?>
 <script type="text/javascript">
-var clnoptmz_uploader = new Array();
+	var clnoptmz_uploader = new Array();
 
-function clnoptmz_upload_image(id) {
-	if ( !clnoptmz_uploader[id] ) {
+	function clnoptmz_upload_image(id) {
+		if ( !clnoptmz_uploader[id] ) {
 
-		clnoptmz_uploader[id] = wp.media.frames.file_frame = wp.media({
-			className: 'media-frame',
-			frame: 'select',
-			multiple: false,
-			title: '<?= __('Select Image') ?>',
-			button: { text: '<?= __('Select Image') ?>' },
-			library: { type: 'image' }
-		});
+			clnoptmz_uploader[id] = wp.media.frames.file_frame = wp.media({
+				className: 'media-frame',
+				frame: 'select',
+				multiple: false,
+				title: '<?= __('Select Image') ?>',
+				button: { text: '<?= __('Select Image') ?>' },
+				library: { type: 'image' }
+			});
 
-		clnoptmz_uploader[id].on('select', function() {
-			attachment = clnoptmz_uploader[id].state().get('selection').first().toJSON();
- 			var url = attachment['url'];
-			jQuery('#'+id).val(url);
-		});
+			clnoptmz_uploader[id].on('select', function() {
+				attachment = clnoptmz_uploader[id].state().get('selection').first().toJSON();
+	 			var url = attachment['url'];
+				jQuery('#'+id).val(url);
+			});
+		}
+
+		clnoptmz_uploader[id].open();
 	}
 
-	clnoptmz_uploader[id].open();
-}
-
-function clnoptmz_clear_image(id) {
-	jQuery('#'+id).val('');
-}
+	function clnoptmz_clear_image(id) {
+		jQuery('#'+id).val('');
+	}
 </script>
 <?php
 }
 
+function ts_clnoptmz_admin_scripts_2() {
+?>
+<style>
+	#wpfooter {
+		position: static;
+		bottom: auto;
+		left: auto;
+		right: auto;
+		background-color: rgba(127,127,127,0.05);
+	}
+</style>
+<?php
+}
+
 if (isset($_GET['page']) && $_GET['page'] == CLNOPTMZ_PLUGIN_SLUG) {
-	add_action('admin_print_scripts', 'ts_clnoptmz_admin_scripts');
+	add_action('admin_print_scripts', 'ts_clnoptmz_admin_scripts_1');
 	add_action('admin_footer', 'ts_clnoptmz_admin_footer');
 }
+add_action('admin_print_scripts', 'ts_clnoptmz_admin_scripts_2', 999);
+
+// --- eof ---
