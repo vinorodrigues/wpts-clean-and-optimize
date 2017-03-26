@@ -1,13 +1,12 @@
 <?php
 
-
 if (!defined('CLNOPTMZ_PLUGIN_SLUG'))
 	define( 'CLNOPTMZ_PLUGIN_SLUG', basename( str_replace( ' ', '%20', plugins_url( '', __FILE__ ) ) ) );
 
 
 /**
  */
-function get_clnoptmz_setting($setting = false) {
+function get_clnoptmz_setting($setting = false, $default = null) {
 	global $ts_clnoptmz_settings;
 
 	if (!isset($ts_clnoptmz_settings))
@@ -15,7 +14,7 @@ function get_clnoptmz_setting($setting = false) {
 
 	if (!$setting) return $ts_clnoptmz_settings;
 	elseif (isset($ts_clnoptmz_settings[$setting])) return $ts_clnoptmz_settings[$setting];
-	else return false;
+	else return $default;
 }
 
 /**
@@ -124,6 +123,30 @@ function ts_clnoptmz_settings_init() {
 		'ts_clnoptmz_plugin_settings',
 		'disabler'
 		);
+
+	add_settings_field(
+		'remove_rss',
+		__('Remove RSS Feed links'),
+		'ts_clnoptmz_remove_rss_render',
+		'ts_clnoptmz_plugin_settings',
+		'disabler'
+		);
+
+	add_settings_field(
+		'remove_admin_bar',
+		__('Remove Admin Bar'),
+		'ts_clnoptmz_remove_admin_bar_render',
+		'ts_clnoptmz_plugin_settings',
+		'disabler'
+		);
+
+	add_settings_field(
+		'remove_blog_clients',
+		__('Remove Blog Clients meta'),
+		'ts_clnoptmz_remove_blog_clients_render',
+		'ts_clnoptmz_plugin_settings',
+		'disabler'
+		);
 }
 
 add_action( 'admin_init', 'ts_clnoptmz_settings_init' );
@@ -161,6 +184,18 @@ function ts_clnoptmz_disable_autop_render() {
 
 function ts_clnoptmz_remove_meta_render() {
 	__ts_clnoptmz_checkbox_render('remove_meta');
+}
+
+function ts_clnoptmz_remove_rss_render() {
+	__ts_clnoptmz_checkbox_render('remove_rss');
+}
+
+function ts_clnoptmz_remove_admin_bar_render() {
+	__ts_clnoptmz_checkbox_render('remove_admin_bar');
+}
+
+function ts_clnoptmz_remove_blog_clients_render() {
+	__ts_clnoptmz_checkbox_render('remove_blog_clients');
 }
 
 function ts_clnoptmz_login_logo_render() {

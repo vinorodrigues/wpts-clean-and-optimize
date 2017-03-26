@@ -4,7 +4,7 @@
  * Plugin URI: http://tecsmith.com.au
  * Description: Things that erk me about Wordpress and their fixes
  * Author: Vino Rodrigues
- * Version: 0.0.01
+ * Version: 0.0.02
  * Author URI: http://vinorodrigues.com
 **/
 
@@ -130,8 +130,27 @@ if (!empty( get_clnoptmz_setting('google_analytics_key') ))
 
 if (get_clnoptmz_setting('remove_meta')) {
 	remove_action('wp_head', 'wp_generator');  // Template
-	add_filter('the_generator','__return_empty_string');  // Feeds
+	add_filter('the_generator','__return_empty_string');  // Generator
 	remove_action('wp_head', 'woo_version');  // WooCommerce
+}
+
+/* ----- REMOVE RSS ------------------------------------------------------- */
+
+if (get_clnoptmz_setting('remove_rss')) {
+	remove_action('wp_head', 'feed_links', 2);
+}
+
+/* ----- REMOVE ADMIN BAR -------------------------------------------------- */
+
+if (get_clnoptmz_setting('remove_admin_bar')) {
+	add_filter( 'show_admin_bar' , '__return_false');
+}
+
+/* ----- REMOVE BLOG CLIENTS META ------------------------------------------ */
+
+if (get_clnoptmz_setting('remove_blog_clients')) {
+	remove_action('wp_head', 'rsd_link');
+	remove_action('wp_head', 'wlwmanifest_link');
 }
 
 /* eof */
