@@ -4,8 +4,9 @@
  * Plugin URI: http://tecsmith.com.au
  * Description: Things that erk me about Wordpress and their fixes
  * Author: Vino Rodrigues
- * Version: 0.0.02
- * Author URI: http://vinorodrigues.com
+ * Version: 0.0.03
+ * Author URI: https://vinorodrigues.com
+ * License: MIT
 **/
 
 
@@ -18,13 +19,15 @@ include_once 'clnoptmz-opt.php';
  * Disable the emoji
  */
 function ts_disable_emoji() {
-	remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+	remove_action( 'wp_head',             'print_emoji_detection_script', 7 );
 	remove_action( 'admin_print_scripts', 'print_emoji_detection_script' );
-	remove_action( 'wp_print_styles', 'print_emoji_styles' );
-	remove_action( 'admin_print_styles', 'print_emoji_styles' );
-	remove_filter( 'the_content_feed', 'wp_staticize_emoji' );
-	remove_filter( 'comment_text_rss', 'wp_staticize_emoji' );
-	remove_filter( 'wp_mail', 'wp_staticize_emoji_for_email' );
+	remove_action( 'embed_head',          'print_emoji_detection_script' );
+	remove_action( 'wp_print_styles',     'print_emoji_styles' );
+	remove_action( 'admin_print_styles',  'print_emoji_styles' );
+
+	remove_filter( 'the_content_feed',    'wp_staticize_emoji' );
+	remove_filter( 'comment_text_rss',    'wp_staticize_emoji' );
+	remove_filter( 'wp_mail',             'wp_staticize_emoji_for_email' );
 }
 
 if (get_clnoptmz_setting('disable_emoji'))
@@ -98,15 +101,15 @@ function ts_custom_login_url() { return home_url(); }
 // function ts_custom_login_title() { return ''; }
 
 if (!empty( get_clnoptmz_setting('login_logo') )) {
-	add_action('login_head', 'ts_custom_login_logo');
-        add_filter('login_headerurl', 'ts_custom_login_url');
+	add_action('login_head',        'ts_custom_login_logo');
+        add_filter('login_headerurl',   'ts_custom_login_url');
         add_filter('login_headertitle', '__return_empty_string');  // 'ts_custom_login_title');
 }
 
 
 /* ----- GOOGLE ANALYTICS ------------------------------------------------- */
 
-function ts_ga_wp_footer() {
+/* function ts_ga_wp_footer() {
 	$value = get_clnoptmz_setting('google_analytics_key');
 ?>
 <!-- Google Analytics -->
@@ -123,15 +126,15 @@ function ts_ga_wp_footer() {
 }
 
 if (!empty( get_clnoptmz_setting('google_analytics_key') ))
-	add_action( 'wp_footer', 'ts_ga_wp_footer', 995 );
+	add_action( 'wp_footer', 'ts_ga_wp_footer', 995 ); */
 
 
 /* ----- REMOVE META ------------------------------------------------------ */
 
 if (get_clnoptmz_setting('remove_meta')) {
-	remove_action('wp_head', 'wp_generator');  // Template
-	add_filter('the_generator','__return_empty_string');  // Generator
-	remove_action('wp_head', 'woo_version');  // WooCommerce
+	remove_action('wp_head',    'wp_generator');  // Template
+	add_filter('the_generator', '__return_empty_string');  // Generator
+	remove_action('wp_head',    'woo_version');  // WooCommerce
 }
 
 /* ----- REMOVE RSS ------------------------------------------------------- */
@@ -152,5 +155,98 @@ if (get_clnoptmz_setting('remove_blog_clients')) {
 	remove_action('wp_head', 'rsd_link');
 	remove_action('wp_head', 'wlwmanifest_link');
 }
+
+/* ----- Wordpress Core Updates -------------------------------------------- */
+
+function ts_disable_updates_pre_transient($update) {
+	include( ABSPATH . WPINC . '/version.php' );
+
+	$current = new stdClass;
+	$current->updates = array();
+	$current->version_checked = $wp_version;
+	$current->last_checked = time();
+
+	return $current;
+}
+
+function ts_disable_updates_admin_init() {
+	if (!function_exists( 'remove_action' )) return;
+
+	// Hide maintenance and update nag
+	// remove_action( 'admin_notices',         'update_nag', 3 );
+	// remove_action( 'network_admin_notices', 'update_nag', 3 );
+	// remove_action( 'admin_notices',         'maintenance_nag' );
+	// remove_action( 'network_admin_notices', 'maintenance_nag' );
+
+	// Disable Core Updates 2.8 to 3.0
+	add_filter( 'pre_option_update_core',   '__return_null' );
+	remove_action( 'wp_version_check',      'wp_version_check' );
+	remove_action( 'admin_init',            '_maybe_update_core' );
+	wp_clear_scheduled_hook( 'wp_version_check' );
+
+	// 3.0
+	wp_clear_scheduled_hook( 'wp_version_check' );
+
+	// 3.7+
+	remove_action( 'wp_maybe_auto_update',  'wp_maybe_auto_update' );
+	remove_action( 'admin_init',            'wp_maybe_auto_update' );
+	remove_action( 'admin_init',            'wp_auto_update_core' );
+	wp_clear_scheduled_hook( 'wp_maybe_auto_update' );
+}
+
+function ts_disable_updates_cron_event($event) {
+	switch( $event->hook ) {
+		case 'wp_version_check':
+		case 'wp_maybe_auto_update':
+			$event = false;
+			break;
+	}
+	return $event;
+}
+
+if (get_clnoptmz_setting('remove_core_updates')) {
+	add_action('admin_init',                           'ts_disable_updates_admin_init');
+
+	// Disable Core Updates 2.8 to 3.0
+	add_filter('pre_transient_update_core',            'ts_disable_updates_pre_transient');
+	add_filter('pre_site_transient_update_core',       'ts_disable_updates_pre_transient');
+
+	// Filter schedule checks
+	add_action('schedule_event',                       'ts_disable_updates_cron_event');
+
+	// Disable All Automatic Updates 3.7+
+	add_filter( 'automatic_updater_disabled',          '__return_true' );
+	add_filter( 'allow_minor_auto_core_updates',       '__return_false' );
+	add_filter( 'allow_major_auto_core_updates',       '__return_false' );
+	add_filter( 'allow_dev_auto_core_updates',         '__return_false' );
+	add_filter( 'auto_update_core',                    '__return_false' );
+	add_filter( 'wp_auto_update_core',                 '__return_false' );
+	add_filter( 'auto_core_update_send_email',         '__return_false' );
+	add_filter( 'send_core_update_notification_email', '__return_false' );
+	add_filter( 'automatic_updates_send_debug_email',  '__return_false' );
+	add_filter( 'automatic_updates_is_vcs_checkout',   '__return_true' );
+	add_filter( 'automatic_updates_send_debug_email ', '__return_false', 1 );
+
+	if (!defined('WP_AUTO_UPDATE_CORE'))
+		define('WP_AUTO_UPDATE_CORE', false);
+	if(!defined('AUTOMATIC_UPDATER_DISABLED'))
+		define('AUTOMATIC_UPDATER_DISABLED', true);
+}
+
+/* ===== =================================================================== */
+
+/* ----- Obscure login screen error messages ------------------------------- */
+function ts_login_err_obscure() {
+	return __('<strong>Sorry</strong> thats not right.');
+}
+
+add_filter('login_errors', 'ts_login_err_obscure');
+
+/* ----- Disable the theme / plugin text editor in Admin ------------------- */
+define('DISALLOW_FILE_EDIT', true);
+
+/* ----- Remove the version number of WP ----------------------------------- */
+remove_action('wp_head', 'wp_generator');
+
 
 /* eof */

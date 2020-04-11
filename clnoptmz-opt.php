@@ -75,13 +75,13 @@ function ts_clnoptmz_settings_init() {
 		'enabler'
 		);
 
-	add_settings_field(
+	/* add_settings_field(
 		'google_analytics_key',
 		__( 'Enable Google Analytics' ),
 		'ts_clnoptmz_google_analytics_key_render',
 		'ts_clnoptmz_plugin_settings',
 		'enabler'
-		);
+		); */
 
 	// DISABLE STUFF
 
@@ -147,6 +147,14 @@ function ts_clnoptmz_settings_init() {
 		'ts_clnoptmz_plugin_settings',
 		'disabler'
 		);
+
+	add_settings_field(
+		'remove_core_updates',
+		__('Remove Wordpress Core updates'),
+		'ts_clnoptmz_remove_core_updates',
+		'ts_clnoptmz_plugin_settings',
+		'disabler'
+		);
 }
 
 add_action( 'admin_init', 'ts_clnoptmz_settings_init' );
@@ -198,6 +206,10 @@ function ts_clnoptmz_remove_blog_clients_render() {
 	__ts_clnoptmz_checkbox_render('remove_blog_clients');
 }
 
+function ts_clnoptmz_remove_core_updates() {
+	__ts_clnoptmz_checkbox_render('remove_core_updates');
+}
+
 function ts_clnoptmz_login_logo_render() {
 	$value = get_clnoptmz_setting('login_logo');
 	?>
@@ -209,7 +221,7 @@ function ts_clnoptmz_login_logo_render() {
 	<?php
 }
 
-function ts_clnoptmz_google_analytics_key_render() {
+/* function ts_clnoptmz_google_analytics_key_render() {
 	$value = get_clnoptmz_setting('google_analytics_key');
 	?>
 	<input type="text" name="ts_clnoptmz_settings[google_analytics_key]"
@@ -217,18 +229,20 @@ function ts_clnoptmz_google_analytics_key_render() {
 		maxlength="18" placeholder="UA-xxxxxxxx-y" pattern="UA-[0-9]{4,10}-[0-9]{1,4}"
 		value="<?= esc_attr($value) ?>">
 	<?php
-}
+} */
 
 function ts_clnoptmz_options_page() {
-	global $title;
+	global $title, $TECSMITH_SVG;
 
 	if ( ! current_user_can( 'manage_options' ) )
 		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 
 ?>
 <div class="wrap">
-	<?php screen_icon(); ?>
-	<h2><?php echo $title ?></h2>
+	<h2><?php
+		if (function_exists('tecsmith_logo')) tecsmith_logo('width:32px;height:32px;vertical-align:middle;');
+		echo $title;
+	?></h2>
 	<?php settings_errors(); ?>
 
 	<form action='options.php' method='post'>
@@ -310,7 +324,7 @@ function ts_clnoptmz_admin_scripts_2() {
 
 if (isset($_GET['page']) && $_GET['page'] == CLNOPTMZ_PLUGIN_SLUG) {
 	add_action('admin_print_scripts', 'ts_clnoptmz_admin_scripts_1');
-	add_action('admin_footer', 'ts_clnoptmz_admin_footer');
+	add_action('admin_footer',        'ts_clnoptmz_admin_footer');
 }
 add_action('admin_print_scripts', 'ts_clnoptmz_admin_scripts_2', 999);
 
